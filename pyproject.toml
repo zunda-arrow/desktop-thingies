@@ -10,6 +10,7 @@ include = [{path = "bin"}]
 python = "^3.10"
 pygobject = "^3.48.2"
 pymunk = "^6.7.0"
+Pillow = "*"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.4.3"

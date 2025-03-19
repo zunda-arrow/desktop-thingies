@@ -23,6 +23,7 @@ class PhysicsObject(ABC):
 
     _physics_shape: pymunk.Shape = dataclasses.field(default=None)  # type: ignore
     _body: pymunk.Body = dataclasses.field(default=None)  # type: ignore
+    _is_held: bool = dataclasses.field(default=False)
 
     _last_velocity_x = 0
     _last_velocity_y = 0
@@ -40,6 +41,8 @@ class PhysicsObject(ABC):
 class Texture(PhysicsObject):
     texture: str = dataclasses.field()
     """The path to a PNG image to use as the texture for this obejct"""
+    held_texture: str = dataclasses.field(default=None)
+    """The path to a PNG image to use as the texture for this obejct if it is being held"""
     scale: float = dataclasses.field(kw_only=True, default=1)
     """Amount to scale the image."""
     collision_scale: float = dataclasses.field(kw_only=True, default=1)
@@ -48,14 +51,21 @@ class Texture(PhysicsObject):
     def __post_init__(self):
         texture_file = Image.open(self.texture)
         height, width = texture_file.size
-
         uniq = str(map(random.choice, ["abcdefghijklmnopqrztuvwxyz"] * 10))
         DEST = f"/tmp/{uniq}.png"
-
         texture_file = texture_file.resize((int(height * self.scale), int(width * self.scale)))
-        texture_file.save(DEST)
-        
+        texture_file.save(DEST)        
         self._gdk_texture = Gdk.Texture.new_from_filename(DEST)
+
+        self._gdk_held_texture = None
+        if self.held_texture:
+           texture_file = Image.open(self.held_texture)
+           height, width = texture_file.size
+           uniq = str(map(random.choice, ["abcdefghijklmnopqrztuvwxyz"] * 10))
+           DEST = f"/tmp/{uniq}.png"
+           texture_file = texture_file.resize((int(height * self.scale), int(width * self.scale)))
+           texture_file.save(DEST)        
+           self._gdk_held_texture = Gdk.Texture.new_from_filename(DEST)
 
         radius = (
             min(self._gdk_texture.get_width(), self._gdk_texture.get_height())
@@ -78,6 +88,13 @@ class Texture(PhysicsObject):
             self._gdk_texture.get_width(),
             self._gdk_texture.get_height(),
         )
+
+        if self._gdk_held_texture != None and self._is_held:
+            snapshot.append_scaled_texture(
+                self._gdk_held_texture, Gsk.ScalingFilter.TRILINEAR, bounds
+            )
+            return
+
         snapshot.append_scaled_texture(
             self._gdk_texture, Gsk.ScalingFilter.TRILINEAR, bounds
         )

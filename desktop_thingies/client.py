@@ -170,7 +170,9 @@ class PhysicsSpace:
 
             snapshot.rotate(angle)
 
+            obj._is_held = self.holding_body == obj._body
             obj.render_onto(snapshot)
+            obj._is_held = False
 
             snapshot.restore()
 
@@ -377,8 +379,8 @@ class PhysicsSpace:
             self.physics_space.add(shape._physics_shape)
 
             shape._body.position = pymunk.Vec2d(
-                random.randrange(0, self.geometry.width / SIMULATION_SCALE),
-                random.randrange(0, self.geometry.height / SIMULATION_SCALE),
+                random.randrange(0, int(self.geometry.width / SIMULATION_SCALE)),
+                random.randrange(0, int(self.geometry.height / SIMULATION_SCALE)),
             )
             shape._body.angle = random.random() * math.pi * 2
             shape._body.velocity_func = self.limit_velocity
